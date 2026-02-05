@@ -2,16 +2,17 @@ import tkinter as tk
 
 
 class PageAccueil(tk.Frame):
-    def __init__(self, parent):
+    def __init__(self, parent, controller):
         super().__init__(parent)
+        self.controller = controller
 
-        # Titre du logiciel
+        # --- TITRES ---
         titre = tk.Label(
             self,
             text="Outil de gestion des Bons de Commande",
-            font=("Arial", 20, "bold")
+            font=("Arial", 22, "bold")
         )
-        titre.pack(pady=20)
+        titre.pack(pady=40)
 
         sous_titre = tk.Label(
             self,
@@ -20,24 +21,23 @@ class PageAccueil(tk.Frame):
         )
         sous_titre.pack(pady=10)
 
-        # Zone boutons
-        zone_boutons = tk.Frame(self)
-        zone_boutons.pack(pady=40)
+        # --- ZONE DES BOUTONS ---
+        zone_btn = tk.Frame(self)
+        zone_btn.pack(pady=60)
 
-        # Boutons principaux
         boutons = [
-            "Bons de commande",
-            "Sites",
-            "Prestataires",
-            "Paramètres"
+            ("Bons de commande", "PageBDC"),
+            ("Prestataires", "PagePrestataires"),
+            ("Sites", "PageSites"),
+            ("Paramètres", "PageParametres"),
         ]
 
-        for texte in boutons:
+        for texte, page in boutons:
             btn = tk.Button(
-                zone_boutons,
+                zone_btn,
                 text=texte,
-                width=25,
-                height=2
+                width=30,
+                height=2,
+                command=lambda p=page: controller.show_page(p)
             )
             btn.pack(pady=8)
-
