@@ -1,13 +1,19 @@
 import tkinter as tk
-from app import Application
+from pages.accueil import PageAccueil
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    root.title("Outil de gestion des BDC – CAPB")
-    root.geometry("900x600")
-    root.minsize(800, 500)
+    app = tk.Tk()
+    app.title("Outil BDC – CAPB")
+    app.geometry("900x600")
 
-    app = Application(root)
-    app.pack(fill="both", expand=True)
+    # ===== CONTEXTE GLOBAL =====
+    contexte = {
+        "utilisateur": "Jeff Monribot",
+        "secteur": "DPBMG – Labourd Sud",
+        "annee": "2026",
+        "annees": ["2024", "2025", "2026"]
+    }
 
-    root.mainloop()
+    PageAccueil(app, contexte)
+
+    app.mainloop()
