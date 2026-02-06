@@ -14,7 +14,7 @@ class PageAccueil(tk.Frame):
         self.canvas = tk.Canvas(self)
         self.canvas.pack(fill="both", expand=True)
 
-        image = Image.open("assets/fond_accueil.png")
+        image = Image.open("assets/fond_accueil_capb.png")
         self.bg_image = ImageTk.PhotoImage(image)
         self.canvas.create_image(0, 0, image=self.bg_image, anchor="nw")
 
