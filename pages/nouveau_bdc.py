@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 import pandas as pd
 import os
+import shutil
 
 from data.marches import get_marches_actifs
 
@@ -31,15 +32,13 @@ class NouveauBDC(tk.Toplevel):
         self.var_chemin_fichier = tk.StringVar()
 
         self.chemin_site_selectionne = None
+        self.df_sites_filtres = None
 
         # =========================
         # TITRE
         # =========================
-        tk.Label(
-            self,
-            text="Création d’un nouveau Bon de Commande",
-            font=("Arial", 16, "bold")
-        ).pack(pady=15)
+        tk.Label(self, text="Création d’un nouveau Bon de Commande",
+                 font=("Arial", 16, "bold")).pack(pady=15)
 
         container = tk.Frame(self)
         container.pack(fill="both", expand=True, padx=20)
@@ -82,10 +81,10 @@ class NouveauBDC(tk.Toplevel):
         frame_pj = tk.Frame(container)
         frame_pj.pack(fill="x")
 
-        ttk.Radiobutton(frame_pj, text="Depuis Outlook", variable=self.var_mode_pj,
-                        value="OUTLOOK").pack(side="left", padx=10)
-        ttk.Radiobutton(frame_pj, text="Depuis un dossier", variable=self.var_mode_pj,
-                        value="DOSSIER").pack(side="left", padx=10)
+        ttk.Radiobutton(frame_pj, text="Depuis Outlook",
+                        variable=self.var_mode_pj, value="OUTLOOK").pack(side="left", padx=10)
+        ttk.Radiobutton(frame_pj, text="Depuis un dossier",
+                        variable=self.var_mode_pj, value="DOSSIER").pack(side="left", padx=10)
 
         ttk.Button(container, text="📎 Sélectionner la pièce jointe",
                    command=self.gerer_piece_jointe).pack(anchor="w", pady=8)
@@ -110,54 +109,43 @@ class NouveauBDC(tk.Toplevel):
         # =========================
         self.charger_prestataires()
         self.charger_sites_filtres()
-
         self.combo_site.bind("<<ComboboxSelected>>", self._site_change)
 
     # ==================================================
     # CHARGEMENT PRESTATAIRES
     # ==================================================
     def charger_prestataires(self):
-        try:
-            df = pd.read_excel("prestataires.xlsx")
-            self.combo_prestataire["values"] = sorted(df["Tiers"].dropna().tolist())
-        except Exception as e:
-            messagebox.showerror("Erreur", f"Impossible de charger les prestataires\n{e}")
+        df = pd.read_excel("prestataires.xlsx")
+        self.combo_prestataire["values"] = sorted(df["Tiers"].dropna().tolist())
 
     # ==================================================
     # CHARGEMENT SITES FILTRÉS
     # ==================================================
     def charger_sites_filtres(self):
-        try:
-            df_sites = pd.read_excel("sites.xlsx")
-            df_users = pd.read_excel("utilisateurs.xlsx")
+        df_sites = pd.read_excel("sites.xlsx")
+        df_users = pd.read_excel("utilisateurs.xlsx")
 
-            utilisateur_nom = self.app.contexte["utilisateur"]
+        utilisateur_nom = self.app.contexte["utilisateur"]
 
-            user = df_users[
-                (df_users["Utilisateur"] == utilisateur_nom) &
-                (df_users["actif"].str.lower() == "oui")
-            ].iloc[0]
+        user = df_users[
+            (df_users["Utilisateur"] == utilisateur_nom) &
+            (df_users["actif"].str.lower() == "oui")
+        ].iloc[0]
 
-            role = user["role"].lower()
-            secteur = user["secteur "]
-            user_id = user["ID"]
+        role = user["role"].lower()
+        secteur = user["secteur"]
+        user_id = user["ID"]
 
-            df_sites = df_sites[df_sites["actif"].str.lower() == "oui"]
+        df_sites = df_sites[df_sites["actif"].str.lower() == "oui"]
 
-            if role == "agent":
-                df_sites = df_sites[df_sites["Technicien_ID"] == user_id]
-            else:  # responsable
-                df_sites = df_sites[df_sites["Secteur"] == secteur]
+        if role == "agent":
+            df_sites = df_sites[df_sites["Technicien_ID"] == user_id]
+        else:
+            df_sites = df_sites[df_sites["Secteur"] == secteur]
 
-            self.df_sites_filtres = df_sites
-            self.combo_site["values"] = sorted(df_sites["BAT"].tolist())
+        self.df_sites_filtres = df_sites
+        self.combo_site["values"] = sorted(df_sites["BAT"].tolist())
 
-        except Exception as e:
-            messagebox.showerror("Erreur", f"Impossible de charger les sites\n{e}")
-
-    # ==================================================
-    # CHANGEMENT DE SITE
-    # ==================================================
     def _site_change(self, event=None):
         bat = self.var_site.get()
         ligne = self.df_sites_filtres[self.df_sites_filtres["BAT"] == bat]
@@ -169,17 +157,12 @@ class NouveauBDC(tk.Toplevel):
     # ==================================================
     def gerer_piece_jointe(self):
         if self.var_mode_pj.get() == "OUTLOOK":
-            messagebox.showinfo(
-                "Outlook",
-                "Outlook sera géré à l’étape suivante.\n\n"
-                "• Mail sélectionné\n"
-                "• Choix de la PJ si plusieurs\n"
-                "• Copie dans le dossier"
-            )
-            return
+            self._recuperer_pj_outlook()
+        else:
+            self._recuperer_pj_dossier()
 
-        dossier_depart = self.chemin_site_selectionne if self.chemin_site_selectionne else os.getcwd()
-
+    def _recuperer_pj_dossier(self):
+        dossier_depart = self.chemin_site_selectionne or os.getcwd()
         fichier = filedialog.askopenfilename(
             title="Sélectionner la pièce jointe",
             initialdir=dossier_depart
@@ -187,6 +170,69 @@ class NouveauBDC(tk.Toplevel):
         if fichier:
             self.var_chemin_fichier.set(fichier)
             self.var_nom_fichier.set(os.path.basename(fichier))
+
+    def _recuperer_pj_outlook(self):
+        try:
+            import win32com.client
+        except ImportError:
+            messagebox.showerror("Outlook", "Le module pywin32 n’est pas installé.")
+            return
+
+        outlook = win32com.client.Dispatch("Outlook.Application")
+        explorer = outlook.ActiveExplorer()
+
+        if not explorer or explorer.Selection.Count == 0:
+            messagebox.showwarning("Outlook", "Aucun mail sélectionné.")
+            return
+
+        mail = explorer.Selection.Item(1)
+
+        if mail.Attachments.Count == 0:
+            messagebox.showwarning("Outlook", "Aucune pièce jointe dans ce mail.")
+            return
+
+        # Choix de la PJ si plusieurs
+        if mail.Attachments.Count > 1:
+            noms = [mail.Attachments.Item(i + 1).FileName for i in range(mail.Attachments.Count)]
+            choix = self._choisir_piece_jointe(noms)
+            if choix is None:
+                return
+            attachment = next(a for a in mail.Attachments if a.FileName == choix)
+        else:
+            attachment = mail.Attachments.Item(1)
+
+        dossier_cible = self.chemin_site_selectionne or os.getcwd()
+        os.makedirs(dossier_cible, exist_ok=True)
+
+        chemin_final = os.path.join(dossier_cible, attachment.FileName)
+        attachment.SaveAsFile(chemin_final)
+
+        self.var_nom_fichier.set(attachment.FileName)
+        self.var_chemin_fichier.set(chemin_final)
+
+    def _choisir_piece_jointe(self, noms):
+        win = tk.Toplevel(self)
+        win.title("Choisir la pièce jointe")
+        win.transient(self)
+        win.grab_set()
+
+        tk.Label(win, text="Plusieurs pièces jointes détectées :").pack(pady=10)
+
+        lb = tk.Listbox(win, width=60)
+        for n in noms:
+            lb.insert(tk.END, n)
+        lb.pack(padx=10, pady=10)
+
+        choix = {"val": None}
+
+        def valider():
+            if lb.curselection():
+                choix["val"] = lb.get(lb.curselection()[0])
+            win.destroy()
+
+        ttk.Button(win, text="Valider", command=valider).pack(pady=10)
+        win.wait_window()
+        return choix["val"]
 
     # ==================================================
     # ENREGISTREMENT (HOOK)
@@ -196,12 +242,6 @@ class NouveauBDC(tk.Toplevel):
             messagebox.showwarning("Champ obligatoire", "La désignation est obligatoire.")
             return
 
-        print("BDC prêt :")
-        print("Désignation :", self.var_designation.get())
-        print("Prestataire :", self.var_prestataire.get())
-        print("Site :", self.var_site.get())
-        print("Marché :", self.var_marche.get())
-        print("Montant HT :", self.var_montant.get())
+        print("BDC prêt (Outlook OK) :")
         print("Fichier :", self.var_chemin_fichier.get())
-
         self.destroy()
