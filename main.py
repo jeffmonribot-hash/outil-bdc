@@ -11,6 +11,17 @@ class Application(tk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
 
+        self.pack(fill="both", expand=True)
+
+        # CONTEXTE GLOBAL (temporaire pour tests)
+        self.contexte = {
+            "utilisateur": "user_001",
+            "utilisateur_id": "user_001",
+            "secteur": "Labourd Nord",
+            "annee": 2026,
+            "annees": [2024, 2025, 2026, 2027]
+        }
+
         self.pages = {}
 
         # Enregistrement des pages
@@ -22,7 +33,7 @@ class Application(tk.Frame):
             PageParametres,
         ):
             page_name = Page.__name__
-            frame = Page(parent=self, controller=self)
+            frame = Page(parent=self, app_context=self)
             self.pages[page_name] = frame
             frame.place(relwidth=1, relheight=1)
 
@@ -30,5 +41,13 @@ class Application(tk.Frame):
         self.show_page("PageAccueil")
 
     def show_page(self, page_name):
-        page = self.pages[page_name]
-        page.tkraise()
+        self.pages[page_name].tkraise()
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("Gestion des Bons de Commande")
+    root.geometry("1200x800")
+
+    app = Application(root)
+    root.mainloop()
