@@ -37,8 +37,11 @@ class NouveauBDC(tk.Toplevel):
         # =========================
         # TITRE
         # =========================
-        tk.Label(self, text="Création d’un nouveau Bon de Commande",
-                 font=("Arial", 16, "bold")).pack(pady=15)
+        tk.Label(
+            self,
+            text="Création d’un nouveau Bon de Commande",
+            font=("Arial", 16, "bold")
+        ).pack(pady=15)
 
         container = tk.Frame(self)
         container.pack(fill="both", expand=True, padx=20)
@@ -52,14 +55,25 @@ class NouveauBDC(tk.Toplevel):
             tk.Label(frame, text=label, width=20, anchor="w").pack(side="left")
             widget.pack(side="left", fill="x", expand=True)
 
-        self.combo_prestataire = ttk.Combobox(container, textvariable=self.var_prestataire, state="readonly")
-        self.combo_site = ttk.Combobox(container, textvariable=self.var_site, state="readonly")
+        self.combo_prestataire = ttk.Combobox(
+            container, textvariable=self.var_prestataire, state="readonly"
+        )
+        self.combo_site = ttk.Combobox(
+            container, textvariable=self.var_site, state="readonly"
+        )
 
         ligne("Désignation :", ttk.Entry(container, textvariable=self.var_designation))
         ligne("Prestataire :", self.combo_prestataire)
         ligne("Site / Bâtiment :", self.combo_site)
-        ligne("Marché :", ttk.Combobox(container, textvariable=self.var_marche,
-                                       values=get_marches_actifs(), state="readonly"))
+        ligne(
+            "Marché :",
+            ttk.Combobox(
+                container,
+                textvariable=self.var_marche,
+                values=get_marches_actifs(),
+                state="readonly"
+            )
+        )
         ligne("Montant HT :", ttk.Entry(container, textvariable=self.var_montant))
 
         # =========================
@@ -67,31 +81,55 @@ class NouveauBDC(tk.Toplevel):
         # =========================
         tk.Label(
             container,
-            text=f"Utilisateur : {self.app.contexte['utilisateur']}  |  "
-                 f"Secteur : {self.app.contexte['secteur']}  |  "
-                 f"Année : {self.app.contexte['annee']}",
+            text=(
+                f"Utilisateur : {self.app.contexte['utilisateur']}  |  "
+                f"Secteur : {self.app.contexte['secteur']}  |  "
+                f"Année : {self.app.contexte['annee']}"
+            ),
             font=("Arial", 10, "italic")
         ).pack(anchor="w", pady=10)
 
         # =========================
         # PIECE JOINTE
         # =========================
-        tk.Label(container, text="Pièce jointe", font=("Arial", 12, "bold")).pack(anchor="w", pady=(15, 5))
+        tk.Label(
+            container,
+            text="Pièce jointe",
+            font=("Arial", 12, "bold")
+        ).pack(anchor="w", pady=(15, 5))
 
         frame_pj = tk.Frame(container)
         frame_pj.pack(fill="x")
 
-        ttk.Radiobutton(frame_pj, text="Depuis Outlook",
-                        variable=self.var_mode_pj, value="OUTLOOK").pack(side="left", padx=10)
-        ttk.Radiobutton(frame_pj, text="Depuis un dossier",
-                        variable=self.var_mode_pj, value="DOSSIER").pack(side="left", padx=10)
+        ttk.Radiobutton(
+            frame_pj,
+            text="Depuis Outlook",
+            variable=self.var_mode_pj,
+            value="OUTLOOK"
+        ).pack(side="left", padx=10)
 
-        ttk.Button(container, text="📎 Sélectionner la pièce jointe",
-                   command=self.gerer_piece_jointe).pack(anchor="w", pady=8)
+        ttk.Radiobutton(
+            frame_pj,
+            text="Depuis un dossier",
+            variable=self.var_mode_pj,
+            value="DOSSIER"
+        ).pack(side="left", padx=10)
+
+        ttk.Button(
+            container,
+            text="📎 Sélectionner la pièce jointe",
+            command=self.gerer_piece_jointe
+        ).pack(anchor="w", pady=8)
 
         tk.Label(container, textvariable=self.var_nom_fichier).pack(anchor="w")
-        tk.Label(container, textvariable=self.var_chemin_fichier,
-                 wraplength=680, justify="left", font=("Arial", 9), fg="#555").pack(anchor="w")
+        tk.Label(
+            container,
+            textvariable=self.var_chemin_fichier,
+            wraplength=680,
+            justify="left",
+            font=("Arial", 9),
+            fg="#555"
+        ).pack(anchor="w")
 
         # =========================
         # BOUTONS
@@ -99,10 +137,19 @@ class NouveauBDC(tk.Toplevel):
         frame_actions = tk.Frame(self)
         frame_actions.pack(pady=15)
 
-        ttk.Button(frame_actions, text="💾 Enregistrer", width=18,
-                   command=self.enregistrer).pack(side="left", padx=10)
-        ttk.Button(frame_actions, text="❌ Annuler", width=18,
-                   command=self.destroy).pack(side="left", padx=10)
+        ttk.Button(
+            frame_actions,
+            text="💾 Enregistrer",
+            width=18,
+            command=self.enregistrer
+        ).pack(side="left", padx=10)
+
+        ttk.Button(
+            frame_actions,
+            text="❌ Annuler",
+            width=18,
+            command=self.destroy
+        ).pack(side="left", padx=10)
 
         # =========================
         # CHARGEMENT DES DONNÉES
@@ -116,7 +163,9 @@ class NouveauBDC(tk.Toplevel):
     # ==================================================
     def charger_prestataires(self):
         df = pd.read_excel("prestataires.xlsx")
-        self.combo_prestataire["values"] = sorted(df["Tiers"].dropna().tolist())
+        self.combo_prestataire["values"] = sorted(
+            df["Tiers"].dropna().tolist()
+        )
 
     # ==================================================
     # CHARGEMENT SITES FILTRÉS
@@ -175,7 +224,10 @@ class NouveauBDC(tk.Toplevel):
         try:
             import win32com.client
         except ImportError:
-            messagebox.showerror("Outlook", "Le module pywin32 n’est pas installé.")
+            messagebox.showerror(
+                "Outlook",
+                "Le module pywin32 n’est pas installé."
+            )
             return
 
         outlook = win32com.client.Dispatch("Outlook.Application")
@@ -188,16 +240,23 @@ class NouveauBDC(tk.Toplevel):
         mail = explorer.Selection.Item(1)
 
         if mail.Attachments.Count == 0:
-            messagebox.showwarning("Outlook", "Aucune pièce jointe dans ce mail.")
+            messagebox.showwarning(
+                "Outlook",
+                "Aucune pièce jointe dans ce mail."
+            )
             return
 
-        # Choix de la PJ si plusieurs
         if mail.Attachments.Count > 1:
-            noms = [mail.Attachments.Item(i + 1).FileName for i in range(mail.Attachments.Count)]
+            noms = [
+                mail.Attachments.Item(i + 1).FileName
+                for i in range(mail.Attachments.Count)
+            ]
             choix = self._choisir_piece_jointe(noms)
             if choix is None:
                 return
-            attachment = next(a for a in mail.Attachments if a.FileName == choix)
+            attachment = next(
+                a for a in mail.Attachments if a.FileName == choix
+            )
         else:
             attachment = mail.Attachments.Item(1)
 
@@ -216,7 +275,10 @@ class NouveauBDC(tk.Toplevel):
         win.transient(self)
         win.grab_set()
 
-        tk.Label(win, text="Plusieurs pièces jointes détectées :").pack(pady=10)
+        tk.Label(
+            win,
+            text="Plusieurs pièces jointes détectées :"
+        ).pack(pady=10)
 
         lb = tk.Listbox(win, width=60)
         for n in noms:
@@ -235,90 +297,87 @@ class NouveauBDC(tk.Toplevel):
         return choix["val"]
 
     # ==================================================
-    # ENREGISTREMENT (HOOK)
+    # ENREGISTREMENT
     # ==================================================
-   def enregistrer(self):
-    if not self.var_designation.get():
-        messagebox.showwarning("Champ obligatoire", "La désignation est obligatoire.")
-        return
+    def enregistrer(self):
+        if not self.var_designation.get():
+            messagebox.showwarning(
+                "Champ obligatoire",
+                "La désignation est obligatoire."
+            )
+            return
 
-    chemin_bdc = "bdc.xlsx"
-    if not os.path.exists(chemin_bdc):
-        messagebox.showerror("Erreur", "Le fichier bdc.xlsx est introuvable.")
-        return
+        chemin_bdc = "bdc.xlsx"
+        if not os.path.exists(chemin_bdc):
+            messagebox.showerror(
+                "Erreur",
+                "Le fichier bdc.xlsx est introuvable."
+            )
+            return
 
-    df_bdc = pd.read_excel(chemin_bdc)
+        df_bdc = pd.read_excel(chemin_bdc)
 
-    # Ligne vide basée sur les colonnes réelles
-    nouvelle_ligne = {col: "" for col in df_bdc.columns}
+        nouvelle_ligne = {col: "" for col in df_bdc.columns}
 
-    def set_if_exists(col, value):
-        if col in nouvelle_ligne:
-            nouvelle_ligne[col] = value
+        def set_if_exists(col, value):
+            if col in nouvelle_ligne:
+                nouvelle_ligne[col] = value
 
-    # =============================
-    # Récupération IDs depuis Excel
-    # =============================
-    def get_id_from_excel(fichier, label_col, id_cols, valeur):
-        try:
-            df = pd.read_excel(fichier)
-            ligne = df[df[label_col] == valeur]
-            if ligne.empty:
+        def get_id_from_excel(fichier, label_col, id_cols, valeur):
+            try:
+                df = pd.read_excel(fichier)
+                ligne = df[df[label_col] == valeur]
+                if ligne.empty:
+                    return ""
+                for col in id_cols:
+                    if col in df.columns:
+                        return ligne.iloc[0][col]
+            except Exception:
                 return ""
-            for col in id_cols:
-                if col in df.columns:
-                    return ligne.iloc[0][col]
-        except Exception:
             return ""
-        return ""
 
-    prestataire_id = get_id_from_excel(
-        "prestataires.xlsx",
-        "Tiers",
-        ["Code tiers CIRIL", "Prestataire_ID", "ID"],
-        self.var_prestataire.get()
-    )
+        prestataire_id = get_id_from_excel(
+            "prestataires.xlsx",
+            "Tiers",
+            ["Code tiers CIRIL", "Prestataire_ID", "ID"],
+            self.var_prestataire.get()
+        )
 
-    site_id = get_id_from_excel(
-        "sites.xlsx",
-        "BAT",
-        ["ID", "Site_ID", "Code", "Technicien_ID"],
-        self.var_site.get()
-    )
+        site_id = get_id_from_excel(
+            "sites.xlsx",
+            "BAT",
+            ["ID", "Site_ID", "Code", "Technicien_ID"],
+            self.var_site.get()
+        )
 
-    # Marché = clé interne (marches.py)
-    marche_id = self.var_marche.get()
+        marche_id = self.var_marche.get()
 
-    # =============================
-    # Remplissage sécurisé
-    # =============================
-    set_if_exists("DESIGNATION", self.var_designation.get())
-    set_if_exists("Prestataire", self.var_prestataire.get())
-    set_if_exists("Prestataire_ID", prestataire_id)
-    set_if_exists("Site", self.var_site.get())
-    set_if_exists("Site_ID", site_id)
-    set_if_exists("Marché", self.var_marche.get())
-    set_if_exists("Marche_ID", marche_id)
-    set_if_exists("Montant_HT", self.var_montant.get())
-    set_if_exists("Statut", "À valider")
-    set_if_exists("Statut_BDC", "À valider")
-    set_if_exists("Date", pd.Timestamp.today())
-    set_if_exists("Utilisateur", self.app.contexte.get("utilisateur"))
-    set_if_exists("Utilisateur_ID", self.app.contexte.get("utilisateur_id"))
-    set_if_exists("Secteur", self.app.contexte.get("secteur"))
-    set_if_exists("Annee", self.app.contexte.get("annee"))
-    set_if_exists("Chemin_Devis", self.var_chemin_fichier.get())
-    set_if_exists("Nom_Devis", self.var_nom_fichier.get())
+        set_if_exists("DESIGNATION", self.var_designation.get())
+        set_if_exists("Prestataire", self.var_prestataire.get())
+        set_if_exists("Prestataire_ID", prestataire_id)
+        set_if_exists("Site", self.var_site.get())
+        set_if_exists("Site_ID", site_id)
+        set_if_exists("Marché", self.var_marche.get())
+        set_if_exists("Marche_ID", marche_id)
+        set_if_exists("Montant_HT", self.var_montant.get())
+        set_if_exists("Statut", "À valider")
+        set_if_exists("Statut_BDC", "À valider")
+        set_if_exists("Date", pd.Timestamp.today())
+        set_if_exists("Utilisateur", self.app.contexte.get("utilisateur"))
+        set_if_exists("Utilisateur_ID", self.app.contexte.get("utilisateur_id"))
+        set_if_exists("Secteur", self.app.contexte.get("secteur"))
+        set_if_exists("Annee", self.app.contexte.get("annee"))
+        set_if_exists("Chemin_Devis", self.var_chemin_fichier.get())
+        set_if_exists("Nom_Devis", self.var_nom_fichier.get())
 
-    # Ajout ligne
-    df_bdc = pd.concat([df_bdc, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
-    df_bdc.to_excel(chemin_bdc, index=False)
+        df_bdc = pd.concat(
+            [df_bdc, pd.DataFrame([nouvelle_ligne])],
+            ignore_index=True
+        )
+        df_bdc.to_excel(chemin_bdc, index=False)
 
-    # Refresh liste BDC
-    if hasattr(self.app, "pages") and "PageBDC" in self.app.pages:
-        self.app.pages["PageBDC"].charger_bdc_depuis_excel()
+        if hasattr(self.app, "pages") and "PageBDC" in self.app.pages:
+            self.app.pages["PageBDC"].charger_bdc_depuis_excel()
 
-    messagebox.showinfo("Succès", "BDC créé avec succès.")
-    self.destroy()
-
-
+        messagebox.showinfo("Succès", "BDC créé avec succès.")
+        self.destroy()
