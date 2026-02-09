@@ -120,10 +120,11 @@ class PageAccueil(tk.Frame):
 
     # ===== ACTIONS =====
     def ouvrir_liste_bdc(self):
-        self.app.show_page("bdc")
+        self.app.show_page("PageBDC")
 
     def ouvrir_nouveau_bdc(self):
-        print("Nouveau BDC (à venir)")
+        from pages.nouveau_bdc import NouveauBDC
+        NouveauBDC(self, self.app)
 
     def ouvrir_parametres(self):
-        print("Paramètres (à venir)")
+        self.app.show_page("PageParametres")
