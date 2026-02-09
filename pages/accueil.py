@@ -7,7 +7,9 @@ class PageAccueil(tk.Frame):
     def __init__(self, parent, app_context):
         super().__init__(parent)
 
-        self.app_context = app_context
+        # 👉 app_context = Application (main.py)
+        self.app = app_context
+
         self.pack(fill="both", expand=True)
 
         # ===== CANVAS =====
@@ -19,92 +21,93 @@ class PageAccueil(tk.Frame):
         self.bg_image = ImageTk.PhotoImage(self.original_image)
         self.bg = self.canvas.create_image(0, 0, image=self.bg_image, anchor="nw")
 
-        # Redimensionnement automatique
         self.bind("<Configure>", self.redimensionner_fond)
 
-        # ===== BANDEAU TITRE =====
+        # ===== TITRE =====
         self.canvas.create_text(
-            450, 40,
+            30, 30,
             text="Outil de gestion des Bons de Commande",
             font=("Arial", 20, "bold"),
-            fill="white"
+            fill="black",
+            anchor="w"
         )
 
         self.canvas.create_text(
-            450, 70,
+            30, 65,
             text="Communauté d’Agglomération Pays Basque",
             font=("Arial", 12),
-            fill="white"
+            fill="black",
+            anchor="w"
         )
 
-        # ===== UTILISATEUR =====
+        # ===== CONTEXTE UTILISATEUR =====
         self.canvas.create_text(
-            20, 120,
-            text=f"Utilisateur : {app_context['utilisateur']}",
+            30, 120,
+            text=f"Utilisateur : {self.app.contexte['utilisateur']}",
             anchor="w",
-            fill="white",
+            fill="#222222",
             font=("Arial", 11)
         )
 
         self.canvas.create_text(
-            20, 145,
-            text=f"Secteur : {app_context['secteur']}",
+            30, 145,
+            text=f"Secteur : {self.app.contexte['secteur']}",
             anchor="w",
-            fill="white",
+            fill="#222222",
             font=("Arial", 11)
         )
 
         # ===== ANNEE =====
         self.canvas.create_text(
-            20, 190,
+            30, 180,
             text="Année :",
             anchor="w",
-            fill="white",
+            fill="#222222",
             font=("Arial", 11)
         )
 
         self.combo_annee = ttk.Combobox(
             self,
-            values=app_context["annees"],
-            width=10
+            values=self.app.contexte["annees"],
+            width=10,
+            state="readonly"
         )
-        self.combo_annee.set(app_context["annee"])
-        self.canvas.create_window(80, 190, window=self.combo_annee, anchor="w")
+        self.combo_annee.set(self.app.contexte["annee"])
+        self.canvas.create_window(90, 180, window=self.combo_annee, anchor="w")
 
-        # ===== ZONE ACTIONS (CENTREE) =====
-        self.zone_actions = tk.Frame(self.canvas, bg="", bd=0)
-        self.canvas.create_window(450, 330, window=self.zone_actions)
+        # ===== ZONE BOUTONS =====
+        self.zone_actions = tk.Frame(self.canvas)
+        self.zone_actions_id = self.canvas.create_window(
+            0, 0,
+            window=self.zone_actions,
+            anchor="center"
+        )
 
-        # Style des boutons
         style = ttk.Style()
-        style.configure("TButton", font=("Arial", 12, "bold"), padding=10)
+        style.configure("TButton", font=("Arial", 13, "bold"), padding=12)
 
-        # ===== BOUTONS =====
-        self.bouton_liste = ttk.Button(
+        ttk.Button(
             self.zone_actions,
             text="📋 Liste des BDC",
             command=self.ouvrir_liste_bdc,
-            width=25
-        )
-        self.bouton_liste.pack(pady=10)
+            width=28
+        ).pack(pady=10)
 
-        self.bouton_nouveau = ttk.Button(
+        ttk.Button(
             self.zone_actions,
             text="➕ Nouveau BDC",
             command=self.ouvrir_nouveau_bdc,
-            width=25
-        )
-        self.bouton_nouveau.pack(pady=10)
+            width=28
+        ).pack(pady=10)
 
-        self.bouton_parametres = ttk.Button(
+        ttk.Button(
             self.zone_actions,
             text="⚙️ Paramètres",
             command=self.ouvrir_parametres,
-            width=25
-        )
-        self.bouton_parametres.pack(pady=10)
+            width=28
+        ).pack(pady=10)
 
-    # ===== REDIMENSIONNEMENT DU FOND =====
+    # ===== REDIMENSIONNEMENT =====
     def redimensionner_fond(self, event):
         largeur = event.width
         hauteur = event.height
@@ -113,12 +116,14 @@ class PageAccueil(tk.Frame):
         self.bg_image = ImageTk.PhotoImage(image_redim)
         self.canvas.itemconfig(self.bg, image=self.bg_image)
 
-    # ===== ACTIONS (VIDES POUR L’INSTANT) =====
+        self.canvas.coords(self.zone_actions_id, largeur / 2, hauteur / 2 + 60)
+
+    # ===== ACTIONS =====
     def ouvrir_liste_bdc(self):
-        print("Ouverture de la liste des BDC")
+        self.app.show_page("bdc")
 
     def ouvrir_nouveau_bdc(self):
-        print("Ouverture de la fenêtre Nouveau BDC")
+        print("Nouveau BDC (à venir)")
 
     def ouvrir_parametres(self):
-        print("Ouverture des paramètres")
+        print("Paramètres (à venir)")
