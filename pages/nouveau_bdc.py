@@ -243,26 +243,62 @@ class NouveauBDC(tk.Toplevel):
         return
 
     chemin_bdc = "bdc.xlsx"
-
     if not os.path.exists(chemin_bdc):
         messagebox.showerror("Erreur", "Le fichier bdc.xlsx est introuvable.")
         return
 
-    # Lecture du fichier existant
-    df = pd.read_excel(chemin_bdc)
+    df_bdc = pd.read_excel(chemin_bdc)
 
-    # Création d'une ligne vide basée sur les colonnes réelles
-    nouvelle_ligne = {col: "" for col in df.columns}
+    # Ligne vide basée sur les colonnes réelles
+    nouvelle_ligne = {col: "" for col in df_bdc.columns}
 
-    # Remplissage sécurisé (uniquement si la colonne existe)
     def set_if_exists(col, value):
         if col in nouvelle_ligne:
             nouvelle_ligne[col] = value
 
+    # =============================
+    # Récupération IDs depuis Excel
+    # =============================
+    def get_id_from_excel(fichier, label_col, id_cols, valeur):
+        try:
+            df = pd.read_excel(fichier)
+            ligne = df[df[label_col] == valeur]
+            if ligne.empty:
+                return ""
+            for col in id_cols:
+                if col in df.columns:
+                    return ligne.iloc[0][col]
+        except Exception:
+            return ""
+        return ""
+
+    prestataire_id = get_id_from_excel(
+        "prestataires.xlsx",
+        "Tiers",
+        ["Code tiers CIRIL", "Prestataire_ID", "ID"],
+        self.var_prestataire.get()
+    )
+
+    site_id = get_id_from_excel(
+        "sites.xlsx",
+        "BAT",
+        ["ID", "Site_ID", "Code", "Technicien_ID"],
+        self.var_site.get()
+    )
+
+    # Marché = clé interne (marches.py)
+    marche_id = self.var_marche.get()
+
+    # =============================
+    # Remplissage sécurisé
+    # =============================
     set_if_exists("DESIGNATION", self.var_designation.get())
     set_if_exists("Prestataire", self.var_prestataire.get())
+    set_if_exists("Prestataire_ID", prestataire_id)
     set_if_exists("Site", self.var_site.get())
+    set_if_exists("Site_ID", site_id)
     set_if_exists("Marché", self.var_marche.get())
+    set_if_exists("Marche_ID", marche_id)
     set_if_exists("Montant_HT", self.var_montant.get())
     set_if_exists("Statut", "À valider")
     set_if_exists("Statut_BDC", "À valider")
@@ -274,14 +310,15 @@ class NouveauBDC(tk.Toplevel):
     set_if_exists("Chemin_Devis", self.var_chemin_fichier.get())
     set_if_exists("Nom_Devis", self.var_nom_fichier.get())
 
-    # Ajout de la ligne
-    df = pd.concat([df, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
-    df.to_excel(chemin_bdc, index=False)
+    # Ajout ligne
+    df_bdc = pd.concat([df_bdc, pd.DataFrame([nouvelle_ligne])], ignore_index=True)
+    df_bdc.to_excel(chemin_bdc, index=False)
 
-    # Refresh liste BDC si elle est ouverte
+    # Refresh liste BDC
     if hasattr(self.app, "pages") and "PageBDC" in self.app.pages:
         self.app.pages["PageBDC"].charger_bdc_depuis_excel()
 
-    messagebox.showinfo("Succès", "Le BDC a été créé.")
+    messagebox.showinfo("Succès", "BDC créé avec succès.")
     self.destroy()
+
 
