@@ -1,23 +1,34 @@
 import tkinter as tk
+
 from pages.accueil import PageAccueil
+from pages.bdc import PageBDC
+from pages.prestataires import PagePrestataires
+from pages.sites import PageSites
+from pages.parametres import PageParametres
 
-if __name__ == "__main__":
-    app = tk.Tk()
-    app.title("Outil BDC – CAPB")
 
-    # 👉 Plein écran (Windows)
-    app.state("zoomed")
+class Application(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
 
-    # Contexte global
-    contexte = {
-        "utilisateur": "Jeff Monribot",
-        "secteur": "DPBMG – Labourd Sud",
-        "annee": "2026",
-        "annees": ["2024", "2025", "2026"]
-    }
+        self.pages = {}
 
-    # Chargement de la page d’accueil
-    PageAccueil(app, contexte)
+        # Enregistrement des pages
+        for Page in (
+            PageAccueil,
+            PageBDC,
+            PagePrestataires,
+            PageSites,
+            PageParametres,
+        ):
+            page_name = Page.__name__
+            frame = Page(parent=self, controller=self)
+            self.pages[page_name] = frame
+            frame.place(relwidth=1, relheight=1)
 
-    # Lancement de l'application
-    app.mainloop()
+        # Page affichée au démarrage
+        self.show_page("PageAccueil")
+
+    def show_page(self, page_name):
+        page = self.pages[page_name]
+        page.tkraise()
