@@ -40,10 +40,13 @@ class PageAccueil(tk.Frame):
             anchor="w"
         )
 
-        # ===== CONTEXTE UTILISATEUR =====
+        # ===== CONTEXTE UTILISATEUR (SÉCURISÉ) =====
+        utilisateur = self.app.contexte.get("utilisateur") or "Utilisateur non identifié"
+        secteur = self.app.contexte.get("secteur") or "—"
+
         self.canvas.create_text(
             30, 120,
-            text=f"Utilisateur : {self.app.contexte['utilisateur']}",
+            text=f"Utilisateur : {utilisateur}",
             anchor="w",
             fill="#222222",
             font=("Arial", 11)
@@ -51,7 +54,7 @@ class PageAccueil(tk.Frame):
 
         self.canvas.create_text(
             30, 145,
-            text=f"Secteur : {self.app.contexte['secteur']}",
+            text=f"Secteur : {secteur}",
             anchor="w",
             fill="#222222",
             font=("Arial", 11)
@@ -68,12 +71,18 @@ class PageAccueil(tk.Frame):
 
         self.combo_annee = ttk.Combobox(
             self,
-            values=self.app.contexte["annees"],
+            values=self.app.contexte.get("annees", []),
             width=10,
             state="readonly"
         )
-        self.combo_annee.set(self.app.contexte["annee"])
-        self.canvas.create_window(90, 180, window=self.combo_annee, anchor="w")
+        self.combo_annee.set(self.app.contexte.get("annee"))
+        self.combo_annee.bind("<<ComboboxSelected>>", self.changer_annee)
+
+        self.canvas.create_window(
+            90, 180,
+            window=self.combo_annee,
+            anchor="w"
+        )
 
         # ===== ZONE BOUTONS =====
         self.zone_actions = tk.Frame(self.canvas)
@@ -116,7 +125,18 @@ class PageAccueil(tk.Frame):
         self.bg_image = ImageTk.PhotoImage(image_redim)
         self.canvas.itemconfig(self.bg, image=self.bg_image)
 
-        self.canvas.coords(self.zone_actions_id, largeur / 2, hauteur / 2 + 60)
+        self.canvas.coords(
+            self.zone_actions_id,
+            largeur / 2,
+            hauteur / 2 + 60
+        )
+
+    # ===== GESTION ANNEE =====
+    def changer_annee(self, event=None):
+        try:
+            self.app.contexte["annee"] = int(self.combo_annee.get())
+        except ValueError:
+            pass
 
     # ===== ACTIONS =====
     def ouvrir_liste_bdc(self):
